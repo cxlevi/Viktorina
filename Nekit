@@ -1,0 +1,598 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+namespace Exemc_
+{
+    internal class Program
+    {
+        public class Login
+        {
+            private string Log { get; set; }
+            private string Password { get; set; }
+            private string Date { get; set; }
+
+            string lpath = "C:\\Users\\Никита\\Desktop\\log.txt";
+            string passpath = "C:\\Users\\Никита\\Desktop\\password.txt";
+            string datepath = "C:\\Users\\Никита\\Desktop\\date.txt";
+
+            public void GetLogin()
+            {
+                Console.WriteLine("Введите логин: ");
+                string l = Console.ReadLine();
+
+                Console.WriteLine("Введите пароль: ");
+                string pass = Console.ReadLine();
+
+                Console.WriteLine("Введите дату рождения: ");
+                string d = Console.ReadLine();
+
+                using (StreamWriter writer = new StreamWriter(lpath, true))
+                {
+                    writer.WriteLine(l);
+                }
+                using (StreamWriter writer = new StreamWriter(passpath, true))
+                {
+                    writer.WriteLine(pass);
+                }
+                using (StreamWriter writer = new StreamWriter(datepath, true))
+                {
+                    writer.WriteLine(d);
+                }
+
+                Console.WriteLine("Регистрация завершена!");
+            }
+
+            public bool CheckLogin(out int userIndex)
+            {
+                Console.WriteLine("Введите логин: ");
+                string l = Console.ReadLine();
+                Console.WriteLine("Введите пароль: ");
+                string pass = Console.ReadLine();
+
+                string[] logs = File.ReadAllLines(lpath);
+                string[] passwords = File.ReadAllLines(passpath);
+
+                for (int i = 0; i < logs.Length; i++)
+                {
+                    if (logs[i] == l && passwords[i] == pass)
+                    {
+                        userIndex = i;
+                        return true;
+                    }
+                }
+
+                userIndex = -1;
+                return false;
+            }
+
+
+            public void ChangePassword(int userIndex)
+            {
+                Console.WriteLine("Введите новый пароль: ");
+                string newPassword = Console.ReadLine();
+
+                string[] passwords = File.ReadAllLines(passpath);
+                passwords[userIndex] = newPassword;
+
+                File.WriteAllLines(passpath, passwords);
+                Console.WriteLine("Пароль успешно изменен!");
+            }
+
+            public void ChangeDate(int userIndex)
+            {
+                Console.WriteLine("Введите новую дату: ");
+                string newDate = Console.ReadLine();
+
+                string[] dates = File.ReadAllLines(datepath);
+                dates[userIndex] = newDate;
+
+                File.WriteAllLines(datepath, dates);
+                Console.WriteLine("Дата успешно изменена!");
+            }
+        }
+        public class Question
+        {
+            public string Text { get; set; }
+            public List<string> Options { get;  }
+            public int CorrectIndex { get; set; }
+
+            public Question(string text, List<string> options, int correctIndex)
+            {
+                Text = text;
+                Options = options;
+                CorrectIndex = correctIndex;
+            }
+
+            public void Display()
+            {
+                Console.WriteLine(Text);
+                for (int i = 0; i < Options.Count; i++)
+                {
+                    Console.WriteLine($"{i + 1}) {Options[i]}");
+                }
+            }
+
+            public bool IsCorrect(int answerIndex)
+            {
+                return answerIndex == CorrectIndex;
+            }
+        }
+
+        public class Viktorina
+        {
+            private string resultPath = "C:\\Users\\Никита\\Desktop\\results.txt";
+            public List<Question> Questions { get; private set; }
+
+            public Viktorina()
+            {
+                Questions = new List<Question>();
+            }
+
+            public void CreateQuiz(string filepath)
+            {
+                Questions = new List<Question>();
+
+                while (true)
+                {
+                    Console.WriteLine("Введите текст вопроса (или 'exit' для завершения):");
+                    string questionText = Console.ReadLine();
+                    if (questionText.ToLower() == "exit") break;
+
+                    var options = new List<string>();
+                    int correctAnswerIndex = -1;
+
+                    for (int i = 0; i < 4; i++)
+                    {
+                        Console.WriteLine($"Введите вариант ответа {i + 1} (или 'exit' для завершения):");
+                        string option = Console.ReadLine();
+                        if (option.ToLower() == "exit") break;
+                        options.Add(option);
+                    }
+
+                    Console.WriteLine("Введите номер правильного ответа (1-4):");
+                    correctAnswerIndex = int.Parse(Console.ReadLine()) - 1;
+
+                    Questions.Add(new Question(questionText, options, correctAnswerIndex));
+                }
+
+                SaveQuiz(filepath);
+            }
+
+            public void SaveQuiz(string filepath)
+            {
+                using (StreamWriter writer = new StreamWriter(filepath))
+                {
+                    foreach (var question in Questions)
+                    {
+                        writer.WriteLine(question.Text);
+                        for (int i = 0; i < question.Options.Count; i++)
+                        {
+                            string option = question.Options[i];
+                            if (i == question.CorrectIndex)
+                                writer.WriteLine($"{i + 1}) {option} +");
+                            else
+                                writer.WriteLine($"{i + 1}) {option}");
+                        }
+                    }
+                }
+
+                Console.WriteLine("Викторина успешно сохранена!");
+            }
+
+            public void EditQuiz(string filepath)
+            {
+                LoadQuiz(filepath);
+
+                while (true)
+                {
+                    Console.WriteLine("Введите номер вопроса для редактирования (или 'exit' для завершения):");
+                    string input = Console.ReadLine();
+                    if (input.ToLower() == "exit") break;
+
+                    int questionIndex = int.Parse(input) - 1;
+                    if (questionIndex < 0 || questionIndex >= Questions.Count)
+                    {
+                        Console.WriteLine("Некорректный номер вопроса.");
+                        continue;
+                    }
+
+                    var question = Questions[questionIndex];
+
+                    Console.WriteLine($"Текущий текст вопроса: {question.Text}");
+                    Console.WriteLine("Введите новый текст вопроса (или оставьте пустым для сохранения текущего):");
+                    string newText = Console.ReadLine();
+                    if (!string.IsNullOrEmpty(newText)) question.Text = newText;
+
+                    for (int i = 0; i < question.Options.Count; i++)
+                    {
+                        Console.WriteLine($"Текущий вариант {i + 1}: {question.Options[i]}");
+                        Console.WriteLine("Введите новый вариант (или оставьте пустым для сохранения текущего):");
+                        string newOption = Console.ReadLine();
+                        if (!string.IsNullOrEmpty(newOption)) question.Options[i] = newOption;
+                    }
+
+                    Console.WriteLine($"Текущий номер правильного ответа: {question.CorrectIndex + 1}");
+                    Console.WriteLine("Введите новый номер правильного ответа (или оставьте пустым для сохранения текущего):");
+                    string newCorrectIndex = Console.ReadLine();
+                    if (!string.IsNullOrEmpty(newCorrectIndex)) question.CorrectIndex = int.Parse(newCorrectIndex) - 1;
+                }
+
+                SaveQuiz(filepath);
+            }
+
+            public void LoadQuiz(string filepath)
+            {
+                var lines = File.ReadAllLines(filepath);
+                string questionText = null;
+                var options = new List<string>();
+                int correctAnswerIndex = -1;
+
+                foreach (var line in lines)
+                {
+                    if (line.Contains(")"))
+                    {
+                        if (line.EndsWith("+"))
+                        {
+                            correctAnswerIndex = options.Count;
+                            options.Add(line.TrimEnd('+').Substring(2).Trim());
+                        }
+                        else
+                        {
+                            options.Add(line.Substring(2).Trim());
+                        }
+                    }
+                    else
+                    {
+                        if (questionText != null && options.Count > 0)
+                        {
+                            Questions.Add(new Question(questionText, options, correctAnswerIndex));
+                        }
+
+                        questionText = line;
+                        options = new List<string>();
+                    }
+                }
+
+                if (questionText != null && options.Count > 0)
+                {
+                    Questions.Add(new Question(questionText, options, correctAnswerIndex));
+                }
+
+                Console.WriteLine($"Загружено вопросов: {Questions.Count}");
+            }
+
+            public void Start(string userName)
+            {
+                int correctAnswers = 0;
+
+                foreach (var question in Questions)
+                {
+                    question.Display();
+                    Console.WriteLine("Введите номер правильного ответа: ");
+                    string answerInput = Console.ReadLine();
+
+                    if (int.TryParse(answerInput, out int answerIndex))
+                    {
+                        if (answerIndex > 0 && answerIndex <= question.Options.Count)
+                        {
+                            Console.WriteLine($"Ответ пользователя: {answerIndex}, Правильный ответ: {question.CorrectIndex + 1}");
+
+                            if (question.IsCorrect(answerIndex - 1))
+                            {
+                                correctAnswers++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Некорректный формат ответа. Пожалуйста, введите номер ответа, например: 1, 2, 3 и т.д.");
+                    }
+                }
+
+                Console.WriteLine($"Вы ответили правильно на {correctAnswers} из {Questions.Count} вопросов.");
+                SaveResult(userName, correctAnswers);
+            }
+
+            public void SaveResult(string userName, int correctAnswers)
+            {
+                using (StreamWriter writer = new StreamWriter(resultPath, true))
+                {
+                    writer.WriteLine($"{userName},{correctAnswers},{DateTime.Now}");
+                }
+            }
+        }
+        private class Result
+        {
+            private string resultPath = "C:\\Users\\Никита\\Desktop\\results.txt";
+
+            public void MainResult()
+            {
+                Console.WriteLine("Ваши прошлые результаты: ");
+
+                string[] results = File.ReadAllLines(resultPath);
+
+                var parsedResults = results.Select(res =>
+                {
+                    var parts = res.Split(',');
+
+                    if (parts.Length < 3)
+                    {
+                        Console.WriteLine($"Некорректная строка в файле результатов: {res}");
+                        return null; 
+                    }
+
+                    string userName = parts[0];
+                    if (!int.TryParse(parts[1], out int correctAnswers))
+                    {
+                        Console.WriteLine($"Некорректное количество правильных ответов в строке: {res}");
+                        return null;
+                    }
+
+                    if (!DateTime.TryParse(parts[2], out DateTime dateTime))
+                    {
+                        Console.WriteLine($"Некорректная дата в строке: {res}");
+                        return null;
+                    }
+
+                    return new { userName, correctAnswers, dateTime };
+                }).Where(result => result != null).ToList(); 
+
+                var sortedResults = parsedResults
+                    .OrderByDescending(res => res.correctAnswers)
+                    .ThenByDescending(res => res.dateTime);
+
+                foreach (var res in sortedResults)
+                {
+                    Console.WriteLine($"Пользователь: {res.userName}, Правильных ответов: {res.correctAnswers}, Дата: {res.dateTime}");
+                }
+                Console.ReadLine();
+            }
+        }
+
+        public class Top
+        {
+            private string resultPath = "C:\\Users\\Никита\\Desktop\\results.txt";
+
+            public void Tablet()
+            {
+                Console.WriteLine("Таблица лидеров: ");
+                DisplayTopResults(20);
+            }
+
+            public void Top20()
+            {
+                Console.WriteLine("Топ-20 игроков: ");
+                DisplayTopResults(20);
+            }
+
+            private void DisplayTopResults(int topCount)
+            {
+                string[] results = File.ReadAllLines(resultPath);
+
+                    var parsedResults = results.Select(res =>
+                    {
+                        var parts = res.Split(',');
+
+                        if (parts.Length < 3)
+                        {
+                            Console.WriteLine($"Некорректная строка в файле результатов: {res}");
+                            return null;
+                        }
+
+                        string userName = parts[0];
+                        if (!int.TryParse(parts[1], out int correctAnswers))
+                        {
+                            Console.WriteLine($"Некорректное количество правильных ответов в строке: {res}");
+                            return null;
+                        }
+
+                        if (!DateTime.TryParse(parts[2], out DateTime dateTime))
+                        {
+                            Console.WriteLine($"Некорректная дата в строке: {res}");
+                            return null;
+                        }
+
+                        return new { userName, correctAnswers, dateTime };
+                    }).Where(result => result != null).ToList();
+
+                    var sortedResults = parsedResults
+                        .OrderByDescending(res => res.correctAnswers)
+                        .ThenByDescending(res => res.dateTime)
+                        .Take(topCount)
+                        .ToList();
+                        
+
+                for (int i = 0; i < sortedResults.Count; i++)
+                {
+                    var res = sortedResults[i];
+                    Console.WriteLine($"{i + 1}) Пользователь: {res.userName}, Правильных ответов: {res.correctAnswers}, Дата: {res.dateTime}");
+                }
+                
+                Console.ReadLine();
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            string[] login =
+               {
+                "Войти",
+                "Зарегистрироваться",
+                "Выход"
+                };
+            int loginIndex = 0;
+
+            var loginManager = new Login();
+            int userIndex = -1;
+
+            while (true)
+            {
+                DrawMenu(login, loginIndex);
+                var key = Console.ReadKey(true).Key;
+                if (key == ConsoleKey.Enter)
+                {
+                    Console.Clear();
+
+                    switch (loginIndex)
+                    {
+                        case 0:
+                            if (loginManager.CheckLogin(out userIndex))
+                            {
+                                Console.WriteLine("Успешный вход!");
+                                MainMenu(userIndex);
+                            }
+                            else
+                            {
+                                Console.WriteLine("Неверный логин или пароль!");
+                            }
+                            break;
+                        case 1:
+                            loginManager.GetLogin();
+                            break;
+                            case 2:
+                            return;
+                    }
+                }
+                switch (key)
+                {
+                    case ConsoleKey.DownArrow:
+                        if (loginIndex < login.Length - 1) loginIndex++;
+                        break;
+                    case ConsoleKey.UpArrow:
+                        if (loginIndex > 0) loginIndex--;
+                        break;
+                }
+            }
+
+           
+        }
+        public static void MainMenu(int userIndex)
+        {
+            string[] menu = {
+        "стартовать новую викторину",
+        "посмотреть результаты своих прошлых викторин",
+        "посмотреть Топ-20 по конкретной викторине",
+        "изменить настройки",
+        "выход"
+    };
+
+            int menuIndex = 0;
+            while (true)
+            {
+                DrawMenu(menu, menuIndex);
+                var key = Console.ReadKey(true).Key;
+                if (key == ConsoleKey.Enter)
+                {
+                    Console.Clear();
+
+                    switch (menuIndex)
+                    {
+                        case 0:
+                            Console.WriteLine("Введите ваше имя:");
+                            string userName = Console.ReadLine();
+
+                            var viktorina = new Viktorina();
+                            ViktorinMenu(userName);
+                            break;
+                        case 1:
+                            Result res = new Result();
+                            res.MainResult();
+                            break;
+                        case 2:
+                            Top top = new Top();
+                            top.Top20();
+                            break;
+                        case 3:
+                            Login log = new Login();
+                            log.ChangePassword(userIndex);
+                            log.ChangeDate(userIndex);
+                            break;
+                        case 4:
+                            return;
+                    }
+                }
+                switch (key)
+                {
+                    case ConsoleKey.DownArrow:
+                        if (menuIndex < menu.Length - 1) menuIndex++;
+                        break;
+                    case ConsoleKey.UpArrow:
+                        if (menuIndex > 0) menuIndex--;
+                        break;
+                }
+            }
+        }
+        public static void DrawMenu(string[] list, int index)
+        {
+            Console.Clear();
+            for (int i = 0; i < list.Length; i++)
+            {
+                if (i == index)
+                {
+                    Console.BackgroundColor = Console.ForegroundColor;
+                    Console.ForegroundColor = ConsoleColor.Black;
+                }
+                Console.WriteLine(list[i]);
+                Console.ResetColor();
+            }
+        }
+
+        public static void ViktorinMenu(string userName)
+        {
+            Console.WriteLine("Выбирете тему: ");
+            var viktorina = new Viktorina();
+            string[] list = { 
+                "История",
+                "География",
+                "Биология"
+            };
+
+            int index = 0;
+            DrawMenu(list, index);
+            while (true)
+            {
+                var key = Console.ReadKey(true).Key;
+
+                switch (key)
+                {
+                    case ConsoleKey.Enter:
+                        Console.Clear();
+                        switch (index)
+                        {
+                            case 0:
+                                viktorina.LoadQuiz("C:\\Users\\Никита\\Desktop\\Viktorina\\История.txt");
+                                viktorina.CreateQuiz("C:\\Users\\Никита\\Desktop\\Viktorina\\История.txt");
+                                viktorina.EditQuiz("C:\\Users\\Никита\\Desktop\\Viktorina\\История.txt");
+                                viktorina.Start(userName);
+                                break;
+                            case 1:
+                                viktorina.LoadQuiz("C:\\Users\\Никита\\Desktop\\Viktorina\\География.txt");
+                                viktorina.CreateQuiz("C:\\Users\\Никита\\Desktop\\Viktorina\\География.txt");
+                                viktorina.EditQuiz("C:\\Users\\Никита\\Desktop\\Viktorina\\География.txt");
+                                viktorina.Start(userName);
+                                break;
+                            case 2:
+                                viktorina.LoadQuiz("C:\\Users\\Никита\\Desktop\\Viktorina\\Биология.txt");
+                                viktorina.CreateQuiz("C:\\Users\\Никита\\Desktop\\Viktorina\\Биология.txt");
+                                viktorina.EditQuiz("C:\\Users\\Никита\\Desktop\\Viktorina\\Биология.txt");
+                                viktorina.Start(userName);
+                                break;
+                        }
+                        return;
+                    case ConsoleKey.DownArrow:
+                        if (index < list.Length - 1) index++;
+                        else index = 0;
+                        DrawMenu(list, index);
+                        break;
+                    case ConsoleKey.UpArrow:
+                        if (index > 0) index--;
+                        else index = list.Length - 1;
+                        DrawMenu(list, index);
+                        break;
+                }
+            }
+        }
+    }
+}
