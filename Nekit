@@ -15,10 +15,15 @@ namespace Exemc_
             private string Password { get; set; }
             private string Date { get; set; }
 
-            string lpath = "C:\\Users\\Никита\\Desktop\\log.txt";
-            string passpath = "C:\\Users\\Никита\\Desktop\\password.txt";
-            string datepath = "C:\\Users\\Никита\\Desktop\\date.txt";
-            string userpath = "C:\\Users\\Никита\\Desktop\\user.txt";
+            static public string lpath = "C:\\Users\\USR\\Desktop\\login.txt";
+            static public string passpath = "C:\\Users\\USR\\Desktop\\password.txt";
+            static public string datepath = "C:\\Users\\USR\\Desktop\\date.txt";
+            static public string userpath = "C:\\Users\\USR\\Desktop\\user.txt";
+            static public string history = "C:\\Viktorina\\История.txt";
+            static public string geography = "C:\\Viktorina\\География.txt";
+            static public string biology = "C:\\Viktorina\\Биология.txt";
+            static public string results = "C:\\Users\\USR\\Desktop\\results.txt";
+
 
             public void GetLogin()
             {
@@ -72,7 +77,7 @@ namespace Exemc_
 
             public bool CheckUserName(out string userName)
             {
-                Console.WriteLine("Введите логин: ");
+                Console.WriteLine("Введите повторно логин: ");
                 string login = Console.ReadLine();
 
                 Dictionary<string, string> userLogins = new Dictionary<string, string>();
@@ -144,7 +149,7 @@ namespace Exemc_
         public class Question
         {
             public string Text { get; set; }
-            public List<string> Options { get;  }
+            public List<string> Options { get; }
             public int CorrectIndex { get; set; }
 
             public Question(string text, List<string> options, int correctIndex)
@@ -171,7 +176,7 @@ namespace Exemc_
 
         public class Viktorina
         {
-            private string resultPath = "C:\\Users\\Никита\\Desktop\\results.txt";
+            private string resultPath = Login.results;
             public List<Question> Questions { get; private set; }
 
             public Viktorina()
@@ -358,7 +363,7 @@ namespace Exemc_
         }
         private class Result
         {
-            private readonly string resultPath = "C:\\Users\\Никита\\Desktop\\results.txt";
+            private readonly string resultPath = Login.results;
             private string currentUserName;
 
             public Result(string userName)
@@ -422,7 +427,7 @@ namespace Exemc_
 
         public class Top
         {
-            private readonly string resultPath = "C:\\Users\\Никита\\Desktop\\results.txt";
+            private readonly string resultPath = Login.results;
 
             public void Top20()
             {
@@ -520,6 +525,8 @@ namespace Exemc_
 
         static void Main(string[] args)
         {
+            ExFile();
+
             string[] login =
                {
                 "Войти",
@@ -555,7 +562,7 @@ namespace Exemc_
                         case 1:
                             loginManager.GetLogin();
                             break;
-                            case 2:
+                        case 2:
                             return;
                     }
                 }
@@ -570,7 +577,7 @@ namespace Exemc_
                 }
             }
 
-           
+
         }
         public static void MainMenu(int userIndex)
         {
@@ -677,15 +684,15 @@ namespace Exemc_
                         switch (index)
                         {
                             case 0:
-                                viktorina.LoadQuiz("C:\\Users\\Никита\\Desktop\\Viktorina\\История.txt");
+                                viktorina.LoadQuiz(Login.history);
                                 viktorina.Start(userName);
                                 break;
                             case 1:
-                                viktorina.LoadQuiz("C:\\Users\\Никита\\Desktop\\Viktorina\\География.txt");
+                                viktorina.LoadQuiz(Login.geography);
                                 viktorina.Start(userName);
                                 break;
                             case 2:
-                                viktorina.LoadQuiz("C:\\Users\\Никита\\Desktop\\Viktorina\\Биология.txt");
+                                viktorina.LoadQuiz(Login.biology);
                                 viktorina.Start(userName);
                                 break;
                             case 3:
@@ -753,6 +760,77 @@ namespace Exemc_
                 }
             }
         }
+        public static string ExFile()
+        {
+            // Определение путей к файлам
+            string logpath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "login.txt");
+            string historypath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "История.txt");
+            string biologypath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Биология.txt");
+            string geopath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "География.txt");
+            string paspath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "password.txt");
+            string datapath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "date.txt");
+            string respath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "results.txt");
+            string uspath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "user.txt");
+
+            // Логин
+            if (!File.Exists(logpath))
+            {
+                using (FileStream fs = File.Create(logpath)) { }
+            }
+            Login.lpath = logpath;
+
+            // История
+            if (!File.Exists(historypath))
+            {
+                using (FileStream fs = File.Create(historypath)) { }
+            }
+            Login.history = historypath;
+
+            // Биология
+            if (!File.Exists(biologypath))
+            {
+                using (FileStream fs = File.Create(biologypath)) { }
+            }
+            Login.biology = biologypath;
+
+            // География
+            if (!File.Exists(geopath))
+            {
+                using (FileStream fs = File.Create(geopath)) { }
+            }
+            Login.geography = geopath;
+
+            // Пароль
+            if (!File.Exists(paspath))
+            {
+                using (FileStream fs = File.Create(paspath)) { }
+            }
+            Login.passpath = paspath;
+
+            // Дата
+            if (!File.Exists(datapath))
+            {
+                using (FileStream fs = File.Create(datapath)) { }
+            }
+            Login.datepath = datapath;
+
+            // Пользователи
+            if (!File.Exists(uspath))
+            {
+                using (FileStream fs = File.Create(uspath)) { }
+            }
+            Login.userpath = uspath;
+
+            // Результаты
+            if (!File.Exists(respath))
+            {
+                using (FileStream fs = File.Create(respath)) { }
+            }
+            Login.results = respath;
+
+            return null;
+        }
+
         public static void ViktorinAdminMenu()
         {
             var viktorina = new Viktorina();
@@ -786,7 +864,8 @@ namespace Exemc_
                                     {
                                         case ConsoleKey.Enter:
                                             Console.Clear();
-                                            viktorina.CreateQuiz($"C:\\Users\\Никита\\Desktop\\Viktorina\\{topics[topicIndex]}.txt");
+                                           
+                                            viktorina.CreateQuiz(AppDomain.CurrentDomain.BaseDirectory + "\\" + topics[topicIndex] + ".txt");
                                             return;
                                         case ConsoleKey.DownArrow:
                                             if (topicIndex < topics.Length - 1) topicIndex++;
@@ -812,7 +891,7 @@ namespace Exemc_
                                     {
                                         case ConsoleKey.Enter:
                                             Console.Clear();
-                                            viktorina.EditQuiz($"C:\\Users\\Никита\\Desktop\\Viktorina\\{editTopics[editTopicIndex]}.txt");
+                                            viktorina.EditQuiz(AppDomain.CurrentDomain.BaseDirectory + "\\" + editTopics[editTopicIndex] + ".txt");
                                             return;
                                         case ConsoleKey.DownArrow:
                                             if (editTopicIndex < editTopics.Length - 1) editTopicIndex++;
@@ -842,7 +921,7 @@ namespace Exemc_
                         break;
                 }
             }
-            
+
         }
     }
 }
